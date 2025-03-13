@@ -12,6 +12,7 @@
 		8385E43E2D8304D500E975E9 /* ActionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8385E42F2D8304D500E975E9 /* ActionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8385E4442D8304E800E975E9 /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8385E4292D83046900E975E9 /* ClipboardManager.swift */; };
 		8385E4652D830CAF00E975E9 /* KeyboardExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8385E45E2D830CAF00E975E9 /* KeyboardExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8385E46A2D830D9300E975E9 /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8385E4292D83046900E975E9 /* ClipboardManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -428,6 +429,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8385E46A2D830D9300E975E9 /* ClipboardManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

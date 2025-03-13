@@ -13,9 +13,58 @@ public class ClipboardManager: ObservableObject {
     @Published public var clipboardItems: [ClipboardItem] = []
     private let maxItems = 50
     private var lastContent: ClipboardContent?
+    private let defaults: UserDefaults
     
     public init() {
+        // Initialize with app group UserDefaults
+        if let groupDefaults = UserDefaults(suiteName: "group.com.arpadbencze.clipboardhistory") {
+            self.defaults = groupDefaults
+        } else {
+            self.defaults = UserDefaults.standard
+        }
+        
+        // Load saved items
+        loadSavedItems()
         startMonitoring()
+    }
+    
+    private func loadSavedItems() {
+        if let savedItems = defaults.array(forKey: "clipboardItems") as? [[String: Any]] {
+            clipboardItems = savedItems.compactMap { dict in
+                guard let id = dict["id"] as? String,
+                      let timestamp = dict["timestamp"] as? Date else { return nil }
+                
+                if let text = dict["text"] as? String {
+                    return ClipboardItem(id: UUID(uuidString: id)!, content: .text(text), timestamp: timestamp)
+                } else if let imageData = dict["imageData"] as? Data,
+                          let image = UIImage(data: imageData) {
+                    return ClipboardItem(id: UUID(uuidString: id)!, content: .image(image), timestamp: timestamp)
+                }
+                return nil
+            }
+        }
+    }
+    
+    private func saveItems() {
+        let itemDicts = clipboardItems.map { item -> [String: Any] in
+            var dict: [String: Any] = [
+                "id": item.id.uuidString,
+                "timestamp": item.timestamp
+            ]
+            
+            switch item.content {
+            case .text(let text):
+                dict["text"] = text
+            case .image(let image):
+                if let imageData = image.pngData() {
+                    dict["imageData"] = imageData
+                }
+            }
+            
+            return dict
+        }
+        
+        defaults.set(itemDicts, forKey: "clipboardItems")
     }
     
     func startMonitoring() {
@@ -30,7 +79,7 @@ public class ClipboardManager: ObservableObject {
         
         let newContent: ClipboardContent?
         
-        if let text = clipboard.string {
+        if let text = clipboard.string?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
             newContent = .text(text)
         } else if let image = clipboard.image {
             newContent = .image(image)
@@ -38,7 +87,7 @@ public class ClipboardManager: ObservableObject {
             newContent = nil
         }
         
-        // Only add if content is different from last check
+        // Only add if content is different from last check and not empty
         if let content = newContent, content != lastContent {
             lastContent = content
             addItem(ClipboardItem(content: content))
@@ -46,14 +95,15 @@ public class ClipboardManager: ObservableObject {
     }
     
     private func addItem(_ item: ClipboardItem) {
-        // Check if item already exists to avoid duplicates
-        guard !clipboardItems.contains(where: { $0.id == item.id }) else { return }
+        // Check if content already exists to avoid duplicates
+        guard !clipboardItems.contains(where: { $0.content == item.content }) else { return }
         
         DispatchQueue.main.async {
             self.clipboardItems.insert(item, at: 0)
             if self.clipboardItems.count > self.maxItems {
                 self.clipboardItems.removeLast()
             }
+            self.saveItems()
         }
     }
     
@@ -70,9 +120,15 @@ public class ClipboardManager: ObservableObject {
 }
 
 public struct ClipboardItem: Identifiable {
-    public let id = UUID()
+    public let id: UUID
     public let content: ClipboardContent
-    public let timestamp = Date()
+    public let timestamp: Date
+    
+    public init(id: UUID = UUID(), content: ClipboardContent, timestamp: Date = Date()) {
+        self.id = id
+        self.content = content
+        self.timestamp = timestamp
+    }
 }
 
 public enum ClipboardContent: Equatable {
