@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8385E42A2D83049300E975E9 /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8385E4292D83046900E975E9 /* ClipboardManager.swift */; };
+		8385E4322D8304D500E975E9 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8385E4312D8304D500E975E9 /* UniformTypeIdentifiers.framework */; };
+		8385E43E2D8304D500E975E9 /* ActionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8385E42F2D8304D500E975E9 /* ActionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8385E4442D8304E800E975E9 /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8385E4292D83046900E975E9 /* ClipboardManager.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		8385E40C2D83043300E975E9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,13 +28,47 @@
 			remoteGlobalIDString = 8385E3FA2D83043200E975E9;
 			remoteInfo = "ClipboardHistory-v1";
 		};
+		8385E43C2D8304D500E975E9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8385E3F32D83043200E975E9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8385E42E2D8304D500E975E9;
+			remoteInfo = ActionExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8385E4432D8304D500E975E9 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				8385E43E2D8304D500E975E9 /* ActionExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		8385E3FB2D83043200E975E9 /* ClipboardHistory-v1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ClipboardHistory-v1.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8385E40B2D83043300E975E9 /* ClipboardHistory-v1Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ClipboardHistory-v1Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8385E4152D83043300E975E9 /* ClipboardHistory-v1UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ClipboardHistory-v1UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8385E4292D83046900E975E9 /* ClipboardManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardManager.swift; sourceTree = "<group>"; };
+		8385E42F2D8304D500E975E9 /* ActionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ActionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		8385E4312D8304D500E975E9 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8385E43F2D8304D500E975E9 /* Exceptions for "ActionExtension" folder in "ActionExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8385E42E2D8304D500E975E9 /* ActionExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8385E3FD2D83043200E975E9 /* ClipboardHistory-v1 */ = {
@@ -35,14 +76,12 @@
 			path = "ClipboardHistory-v1";
 			sourceTree = "<group>";
 		};
-		8385E40E2D83043300E975E9 /* ClipboardHistory-v1Tests */ = {
+		8385E4332D8304D500E975E9 /* ActionExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "ClipboardHistory-v1Tests";
-			sourceTree = "<group>";
-		};
-		8385E4182D83043300E975E9 /* ClipboardHistory-v1UITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "ClipboardHistory-v1UITests";
+			exceptions = (
+				8385E43F2D8304D500E975E9 /* Exceptions for "ActionExtension" folder in "ActionExtension" target */,
+			);
+			path = ActionExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,15 +108,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8385E42C2D8304D500E975E9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8385E4322D8304D500E975E9 /* UniformTypeIdentifiers.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		8385E3F22D83043200E975E9 = {
 			isa = PBXGroup;
 			children = (
+				8385E4282D83046300E975E9 /* Shared */,
 				8385E3FD2D83043200E975E9 /* ClipboardHistory-v1 */,
-				8385E40E2D83043300E975E9 /* ClipboardHistory-v1Tests */,
-				8385E4182D83043300E975E9 /* ClipboardHistory-v1UITests */,
+				8385E4332D8304D500E975E9 /* ActionExtension */,
+				8385E4302D8304D500E975E9 /* Frameworks */,
 				8385E3FC2D83043200E975E9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,8 +136,25 @@
 				8385E3FB2D83043200E975E9 /* ClipboardHistory-v1.app */,
 				8385E40B2D83043300E975E9 /* ClipboardHistory-v1Tests.xctest */,
 				8385E4152D83043300E975E9 /* ClipboardHistory-v1UITests.xctest */,
+				8385E42F2D8304D500E975E9 /* ActionExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8385E4282D83046300E975E9 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				8385E4292D83046900E975E9 /* ClipboardManager.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		8385E4302D8304D500E975E9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8385E4312D8304D500E975E9 /* UniformTypeIdentifiers.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -102,10 +167,12 @@
 				8385E3F72D83043200E975E9 /* Sources */,
 				8385E3F82D83043200E975E9 /* Frameworks */,
 				8385E3F92D83043200E975E9 /* Resources */,
+				8385E4432D8304D500E975E9 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				8385E43D2D8304D500E975E9 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				8385E3FD2D83043200E975E9 /* ClipboardHistory-v1 */,
@@ -130,9 +197,6 @@
 			dependencies = (
 				8385E40D2D83043300E975E9 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				8385E40E2D83043300E975E9 /* ClipboardHistory-v1Tests */,
-			);
 			name = "ClipboardHistory-v1Tests";
 			packageProductDependencies = (
 			);
@@ -153,15 +217,34 @@
 			dependencies = (
 				8385E4172D83043300E975E9 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				8385E4182D83043300E975E9 /* ClipboardHistory-v1UITests */,
-			);
 			name = "ClipboardHistory-v1UITests";
 			packageProductDependencies = (
 			);
 			productName = "ClipboardHistory-v1UITests";
 			productReference = 8385E4152D83043300E975E9 /* ClipboardHistory-v1UITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		8385E42E2D8304D500E975E9 /* ActionExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8385E4402D8304D500E975E9 /* Build configuration list for PBXNativeTarget "ActionExtension" */;
+			buildPhases = (
+				8385E42B2D8304D500E975E9 /* Sources */,
+				8385E42C2D8304D500E975E9 /* Frameworks */,
+				8385E42D2D8304D500E975E9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				8385E4332D8304D500E975E9 /* ActionExtension */,
+			);
+			name = ActionExtension;
+			packageProductDependencies = (
+			);
+			productName = ActionExtension;
+			productReference = 8385E42F2D8304D500E975E9 /* ActionExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -184,6 +267,9 @@
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = 8385E3FA2D83043200E975E9;
 					};
+					8385E42E2D8304D500E975E9 = {
+						CreatedOnToolsVersion = 16.2;
+					};
 				};
 			};
 			buildConfigurationList = 8385E3F62D83043200E975E9 /* Build configuration list for PBXProject "ClipboardHistory-v1" */;
@@ -203,6 +289,7 @@
 				8385E3FA2D83043200E975E9 /* ClipboardHistory-v1 */,
 				8385E40A2D83043300E975E9 /* ClipboardHistory-v1Tests */,
 				8385E4142D83043300E975E9 /* ClipboardHistory-v1UITests */,
+				8385E42E2D8304D500E975E9 /* ActionExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -229,6 +316,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8385E42D2D8304D500E975E9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -236,6 +330,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8385E42A2D83049300E975E9 /* ClipboardManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,6 +348,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8385E42B2D8304D500E975E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8385E4442D8304E800E975E9 /* ClipboardManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -265,6 +368,11 @@
 			isa = PBXTargetDependency;
 			target = 8385E3FA2D83043200E975E9 /* ClipboardHistory-v1 */;
 			targetProxy = 8385E4162D83043300E975E9 /* PBXContainerItemProxy */;
+		};
+		8385E43D2D8304D500E975E9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8385E42E2D8304D500E975E9 /* ActionExtension */;
+			targetProxy = 8385E43C2D8304D500E975E9 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -518,6 +626,56 @@
 			};
 			name = Release;
 		};
+		8385E4412D8304D500E975E9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 985S5U44FQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ActionExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ActionExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "AbenLabs.ClipboardHistory-v1.ActionExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8385E4422D8304D500E975E9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 985S5U44FQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ActionExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ActionExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "AbenLabs.ClipboardHistory-v1.ActionExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -553,6 +711,15 @@
 			buildConfigurations = (
 				8385E4262D83043300E975E9 /* Debug */,
 				8385E4272D83043300E975E9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8385E4402D8304D500E975E9 /* Build configuration list for PBXNativeTarget "ActionExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8385E4412D8304D500E975E9 /* Debug */,
+				8385E4422D8304D500E975E9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
