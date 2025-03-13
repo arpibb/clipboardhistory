@@ -16,6 +16,14 @@ class KeyboardViewController: UIInputViewController {
         super.viewDidLoad()
         clipboardManager = ClipboardManager()
         setupUI()
+        
+        // Listen for clipboard changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(clipboardDidChange),
+            name: Notification.Name("ClipboardHistoryDidChange"),
+            object: nil
+        )
     }
     
     private func setupUI() {
@@ -69,6 +77,14 @@ class KeyboardViewController: UIInputViewController {
     override func textWillChange(_ textInput: UITextInput?) {}
     
     override func textDidChange(_ textInput: UITextInput?) {}
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func clipboardDidChange() {
+        collectionView.reloadData()
+    }
 }
 
 // MARK: - UICollectionView DataSource & Delegate
@@ -81,7 +97,10 @@ extension KeyboardViewController: UICollectionViewDelegate, UICollectionViewData
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ClipboardItemCell", for: indexPath) as! ClipboardItemCell
         let item = clipboardManager.clipboardItems[indexPath.item]
         if case .text(let text) = item.content {
-            cell.configure(with: text)
+            cell.configure(with: text) { [weak self] in
+                self?.clipboardManager.deleteItem(item)
+                collectionView.reloadData()
+            }
         }
         return cell
     }
@@ -104,6 +123,15 @@ class ClipboardItemCell: UICollectionViewCell {
         return label
     }()
     
+    private let deleteButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
+        button.tintColor = .systemRed
+        return button
+    }()
+    
+    var onDelete: (() -> Void)?
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -119,16 +147,32 @@ class ClipboardItemCell: UICollectionViewCell {
         contentView.layer.masksToBounds = true
         
         contentView.addSubview(textLabel)
+        contentView.addSubview(deleteButton)
+        
         textLabel.translatesAutoresizingMaskIntoConstraints = false
+        deleteButton.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
             textLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
             textLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
-            textLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
-            textLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+            textLabel.trailingAnchor.constraint(equalTo: deleteButton.leadingAnchor, constant: -8),
+            textLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            
+            deleteButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            deleteButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            deleteButton.widthAnchor.constraint(equalToConstant: 24),
+            deleteButton.heightAnchor.constraint(equalToConstant: 24)
         ])
+        
+        deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
     }
     
-    func configure(with text: String) {
+    func configure(with text: String, onDelete: @escaping () -> Void) {
         textLabel.text = text
+        self.onDelete = onDelete
+    }
+    
+    @objc private func deleteButtonTapped() {
+        onDelete?()
     }
 }

@@ -14,6 +14,7 @@ public class ClipboardManager: ObservableObject {
     private let maxItems = 50
     private var lastContent: ClipboardContent?
     private let defaults: UserDefaults
+    private var notificationObserver: Any?
     
     public init() {
         // Initialize with app group UserDefaults
@@ -26,6 +27,9 @@ public class ClipboardManager: ObservableObject {
         // Load saved items
         loadSavedItems()
         startMonitoring()
+        
+        // Start listening for changes
+        setupNotifications()
     }
     
     private func loadSavedItems() {
@@ -65,6 +69,13 @@ public class ClipboardManager: ObservableObject {
         }
         
         defaults.set(itemDicts, forKey: "clipboardItems")
+        
+        // Notify other instances about the change
+        NotificationCenter.default.post(
+            name: Notification.Name("ClipboardHistoryDidChange"),
+            object: nil,
+            userInfo: nil
+        )
     }
     
     func startMonitoring() {
@@ -115,6 +126,42 @@ public class ClipboardManager: ObservableObject {
             clipboard.string = text
         case .image(let image):
             clipboard.image = image
+        }
+    }
+    
+    public func deleteItem(_ item: ClipboardItem) {
+        DispatchQueue.main.async {
+            self.clipboardItems.removeAll { $0.id == item.id }
+            self.saveItems()
+        }
+    }
+    
+    public func deleteAllItems() {
+        DispatchQueue.main.async {
+            self.clipboardItems.removeAll()
+            self.saveItems()
+        }
+    }
+    
+    private func setupNotifications() {
+        // Remove any existing observer
+        if let observer = notificationObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        
+        // Add new observer for clipboard changes
+        notificationObserver = NotificationCenter.default.addObserver(
+            forName: Notification.Name("ClipboardHistoryDidChange"),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.loadSavedItems()
+        }
+    }
+    
+    deinit {
+        if let observer = notificationObserver {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 }

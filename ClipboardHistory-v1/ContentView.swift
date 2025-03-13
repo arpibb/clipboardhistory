@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var clipboardManager: ClipboardManager
     @State private var showingCopiedAlert = false
+    @State private var showingDeleteAllAlert = false
     @State private var lastCopiedItem: ClipboardItem?
     
     var body: some View {
@@ -38,9 +39,25 @@ struct ContentView: View {
                                     lastCopiedItem = item
                                     showingCopiedAlert = true
                                 }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        clipboardManager.deleteItem(item)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
                         }
                     }
                     .listStyle(InsetGroupedListStyle())
+                    .toolbar {
+                        if !clipboardManager.clipboardItems.isEmpty {
+                            Button(role: .destructive) {
+                                showingDeleteAllAlert = true
+                            } label: {
+                                Text("Clear All")
+                            }
+                        }
+                    }
                 }
             }
             .navigationTitle("Clipboard History")
@@ -55,6 +72,14 @@ struct ContentView: View {
                         Text("Image copied to clipboard")
                     }
                 }
+            }
+            .alert("Clear All Items?", isPresented: $showingDeleteAllAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Clear All", role: .destructive) {
+                    clipboardManager.deleteAllItems()
+                }
+            } message: {
+                Text("This will delete all items from your clipboard history. This action cannot be undone.")
             }
         }
     }
