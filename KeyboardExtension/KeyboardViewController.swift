@@ -269,11 +269,28 @@ extension KeyboardViewController: UICollectionViewDelegate, UICollectionViewData
         return cell
     }
     
+    func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {
+        guard let cell = collectionView.cellForItem(at: indexPath) as? ClipboardItemCell else { return }
+        UIView.animate(withDuration: 0.1) {
+            cell.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            cell.backgroundColor = UIColor.white.withAlphaComponent(0.6)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didUnhighlightItemAt indexPath: IndexPath) {
+        guard let cell = collectionView.cellForItem(at: indexPath) as? ClipboardItemCell else { return }
+        UIView.animate(withDuration: 0.1) {
+            cell.transform = .identity
+            cell.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        }
+    }
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = clipboardManager.clipboardItems[indexPath.item]
         if case .text(let text) = item.content {
             textDocumentProxy.insertText(text)
         }
+        collectionView.deselectItem(at: indexPath, animated: true)
     }
 }
 
@@ -297,9 +314,11 @@ class ClipboardItemCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        contentView.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        layer.cornerRadius = 8
         contentView.layer.cornerRadius = 8
         contentView.layer.masksToBounds = true
+        layer.masksToBounds = true
         
         contentView.addSubview(textLabel)
         
