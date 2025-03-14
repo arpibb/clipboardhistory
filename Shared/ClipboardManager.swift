@@ -248,6 +248,14 @@ public class ClipboardManager: ObservableObject {
             self.defaults.removeObject(forKey: "clipboardItems")
             self.defaults.synchronize()
             
+            // Store the current clipboard content as lastContent
+            // This prevents it from being immediately re-added
+            if let text = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+                self.lastContent = .text(text)
+            } else if let image = UIPasteboard.general.image {
+                self.lastContent = .image(image)
+            }
+            
             // Notify all instances
             NotificationCenter.default.post(
                 name: ClipboardManager.clipboardChangedNotification,
