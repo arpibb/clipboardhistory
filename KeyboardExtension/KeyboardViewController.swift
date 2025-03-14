@@ -12,11 +12,12 @@ class KeyboardViewController: UIInputViewController {
     private var collectionView: UICollectionView!
     private var nextKeyboardButton: UIButton!
     private var toggleButton: UIButton!
+    private var toggleLabel: UILabel!
     private var keyboardView: UIView!
     private var isHistoryExpanded: Bool = false
     
     private let collapsedHeight: CGFloat = 24 // Height for toggle button + padding
-    private let expandedHeight: CGFloat = 76 // Height for clipboard items
+    private let expandedHeight: CGFloat = 56 // Height for clipboard items
     
     private var collectionViewHeightConstraint: NSLayoutConstraint!
     private var toggleButtonHeightConstraint: NSLayoutConstraint!
@@ -45,6 +46,8 @@ class KeyboardViewController: UIInputViewController {
     private func setupUI() {
         view.backgroundColor = UIColor(red: 209/255, green: 212/255, blue: 217/255, alpha: 1.0) // iOS keyboard gray
         
+
+        
         // Setup toggle button
         toggleButton = UIButton(type: .system)
         toggleButton.setImage(UIImage(systemName: "chevron.down"), for: .normal)
@@ -53,16 +56,24 @@ class KeyboardViewController: UIInputViewController {
         toggleButton.contentEdgeInsets = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
         toggleButton.addTarget(self, action: #selector(toggleHistoryView), for: .touchUpInside)
         
+        // Setup toggle label
+        toggleLabel = UILabel()
+        toggleLabel.text = "Clipboard History"
+        toggleLabel.font = .systemFont(ofSize: 15)
+        toggleLabel.textColor = .systemGray
+        
         view.addSubview(toggleButton)
+        view.addSubview(toggleLabel)
         toggleButton.translatesAutoresizingMaskIntoConstraints = false
+        toggleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         // Setup collection view
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 120, height: 60)
+        layout.itemSize = CGSize(width: 120, height: 40)
         layout.minimumInteritemSpacing = 8
         layout.minimumLineSpacing = 8
-        layout.sectionInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        layout.sectionInset = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
@@ -90,6 +101,9 @@ class KeyboardViewController: UIInputViewController {
             toggleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
             toggleButton.widthAnchor.constraint(equalToConstant: 30),
             toggleButtonHeightConstraint,
+            
+            toggleLabel.centerYAnchor.constraint(equalTo: toggleButton.centerYAnchor),
+            toggleLabel.leadingAnchor.constraint(equalTo: toggleButton.trailingAnchor, constant: 4),
             
             collectionView.topAnchor.constraint(equalTo: toggleButton.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -145,6 +159,13 @@ class KeyboardViewController: UIInputViewController {
             self.collectionView.isHidden = !self.isHistoryExpanded
             self.collectionView.alpha = self.isHistoryExpanded ? 1.0 : 0.0
             
+            // Rotate chevron
+            self.toggleButton.transform = self.isHistoryExpanded ? 
+                CGAffineTransform(rotationAngle: .pi) : .identity
+            
+            // Update label
+            self.toggleLabel.text = self.isHistoryExpanded ? "Close History" : "Copy History"
+            
             // Force layout update
             self.view.layoutIfNeeded()
         }
@@ -159,7 +180,7 @@ class KeyboardViewController: UIInputViewController {
             ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
             ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
             ["⇧", "z", "x", "c", "v", "b", "n", "m", "⌫"],
-            ["123", "🌐", "space", "return"]
+            ["123", "space", "return"]
         ]
         
         let stackView = UIStackView()
@@ -293,10 +314,10 @@ class ClipboardItemCell: UICollectionViewCell {
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            textLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            textLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             textLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
             textLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
-            textLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+            textLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
         ])
     }
     
