@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct ClipboardHistoryApp: App {
-    @StateObject private var clipboardManager = ClipboardManager()
+    @StateObject private var clipboardManager = ClipboardManager.shared
     
     init() {
         // Request clipboard permission by attempting to access it

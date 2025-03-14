@@ -25,8 +25,8 @@ class KeyboardViewController: UIInputViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        clipboardManager = ClipboardManager()
         setupUI()
+        setupClipboardManager()
         
         // Set initial state to collapsed
         toggleButtonHeightConstraint.constant = 24 // Keep toggle button visible
@@ -34,13 +34,77 @@ class KeyboardViewController: UIInputViewController {
         collectionView.isHidden = true
         collectionView.alpha = 0
         
+
+    }
+    
+    private func setupClipboardManager() {
+        // Use the shared clipboard manager from the app group
+        clipboardManager = ClipboardManager.shared
+        clipboardManager.loadSavedItems()
+        
+        // Remove any existing observers
+        NotificationCenter.default.removeObserver(self)
+        
         // Listen for clipboard changes
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(clipboardDidChange),
-            name: Notification.Name("ClipboardHistoryDidChange"),
+            selector: #selector(handleClipboardChange(_:)),
+            name: ClipboardManager.clipboardChangedNotification,
             object: nil
         )
+        
+        // Listen for keyboard becoming active
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleKeyboardWillShow(_:)),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        
+        // Listen for keyboard being deactivated
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleKeyboardWillHide(_:)),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        cleanup()
+    }
+    
+    private func cleanup() {
+        // Clean up when keyboard is dismissed
+        NotificationCenter.default.removeObserver(self)
+        clipboardManager = nil
+        print("⌨️ Keyboard cleanup - removing observers and resetting manager")
+    }
+    
+    @objc private func handleClipboardChange(_ notification: Notification) {
+        // Force reload the items from UserDefaults
+        clipboardManager.loadSavedItems()
+        collectionView.reloadData()
+        
+        // Log item count for debugging
+        if let userInfo = notification.userInfo,
+           let itemCount = userInfo["itemCount"] as? Int {
+            print("📋 Clipboard items updated: \(itemCount) items")
+        }
+    }
+    
+    @objc private func handleKeyboardWillShow(_ notification: Notification) {
+        // Reset clipboard manager when keyboard appears
+        setupClipboardManager()
+        collectionView.reloadData()
+        
+        // Log for debugging
+        print("⌨️ Keyboard shown - reloading clipboard items")
+    }
+    
+    @objc private func handleKeyboardWillHide(_ notification: Notification) {
+        cleanup()
     }
     
     private func setupUI() {
@@ -246,11 +310,7 @@ class KeyboardViewController: UIInputViewController {
     override func textDidChange(_ textInput: UITextInput?) {}
     
     deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    @objc private func clipboardDidChange() {
-        collectionView.reloadData()
+        cleanup()
     }
 }
 
