@@ -97,7 +97,7 @@ class KeyboardViewController: UIInputViewController {
         keyboardTopConstraint = keyboardView.topAnchor.constraint(equalTo: collectionView.bottomAnchor)
         
         NSLayoutConstraint.activate([
-            toggleButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 2),
+            toggleButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
             toggleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
             toggleButton.widthAnchor.constraint(equalToConstant: 30),
             toggleButtonHeightConstraint,
