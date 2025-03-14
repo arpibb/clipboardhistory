@@ -37,7 +37,7 @@ public class ClipboardManager: ObservableObject {
             print("⚠️ Warning: Could not access app group defaults, using standard defaults")
         }
         
-        // Reset any stale data
+        // // Reset any stale data
         defaults.synchronize()
         
         // Load saved items
@@ -178,7 +178,7 @@ public class ClipboardManager: ObservableObject {
             if self.clipboardItems.count > ClipboardManager.maxItems {
                 self.clipboardItems = Array(self.clipboardItems.prefix(ClipboardManager.maxItems))
             }
-            
+
             // Save and notify
             self.saveItems()
         }
@@ -248,15 +248,17 @@ public class ClipboardManager: ObservableObject {
             self.defaults.removeObject(forKey: "clipboardItems")
             self.defaults.synchronize()
             
-            // Reset last content
-            self.lastContent = nil
-            
             // Notify all instances
             NotificationCenter.default.post(
                 name: ClipboardManager.clipboardChangedNotification,
                 object: self,
                 userInfo: ["itemCount": 0]
             )
+            
+            // Resume monitoring after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.startMonitoring()
+            }
         }
     }
     
