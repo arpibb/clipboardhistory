@@ -11,11 +11,27 @@ class KeyboardViewController: UIInputViewController {
     private var clipboardManager: ClipboardManager!
     private var collectionView: UICollectionView!
     private var nextKeyboardButton: UIButton!
+    private var toggleButton: UIButton!
+    private var keyboardView: UIView!
+    private var isHistoryExpanded: Bool = false
+    
+    private let collapsedHeight: CGFloat = 24 // Height for toggle button + padding
+    private let expandedHeight: CGFloat = 76 // Height for clipboard items
+    
+    private var collectionViewHeightConstraint: NSLayoutConstraint!
+    private var toggleButtonHeightConstraint: NSLayoutConstraint!
+    private var keyboardTopConstraint: NSLayoutConstraint!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         clipboardManager = ClipboardManager()
         setupUI()
+        
+        // Set initial state to collapsed
+        toggleButtonHeightConstraint.constant = 24 // Keep toggle button visible
+        collectionViewHeightConstraint.constant = 0
+        collectionView.isHidden = true
+        collectionView.alpha = 0
         
         // Listen for clipboard changes
         NotificationCenter.default.addObserver(
@@ -27,37 +43,70 @@ class KeyboardViewController: UIInputViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = UIColor(red: 209/255, green: 212/255, blue: 217/255, alpha: 1.0) // iOS keyboard gray
+        
+        // Setup toggle button
+        toggleButton = UIButton(type: .system)
+        toggleButton.setImage(UIImage(systemName: "chevron.down"), for: .normal)
+        toggleButton.tintColor = .systemGray // Match iOS keyboard color
+        toggleButton.backgroundColor = .clear // Remove background
+        toggleButton.contentEdgeInsets = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+        toggleButton.addTarget(self, action: #selector(toggleHistoryView), for: .touchUpInside)
+        
+        view.addSubview(toggleButton)
+        toggleButton.translatesAutoresizingMaskIntoConstraints = false
         
         // Setup collection view
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 150, height: 70)
+        layout.itemSize = CGSize(width: 120, height: 60)
         layout.minimumInteritemSpacing = 8
         layout.minimumLineSpacing = 8
         layout.sectionInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .systemGroupedBackground
+        collectionView.backgroundColor = .clear
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(ClipboardItemCell.self, forCellWithReuseIdentifier: "ClipboardItemCell")
         collectionView.showsHorizontalScrollIndicator = false
+        collectionView.isHidden = true
         
         view.addSubview(collectionView)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Setup keyboard view
+        keyboardView = createKeyboardView()
+        view.addSubview(keyboardView)
+        keyboardView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Store constraints that we'll need to modify
+        toggleButtonHeightConstraint = toggleButton.heightAnchor.constraint(equalToConstant: 20)
+        collectionViewHeightConstraint = collectionView.heightAnchor.constraint(equalToConstant: expandedHeight)
+        keyboardTopConstraint = keyboardView.topAnchor.constraint(equalTo: collectionView.bottomAnchor)
+        
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            toggleButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 2),
+            toggleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            toggleButton.widthAnchor.constraint(equalToConstant: 30),
+            toggleButtonHeightConstraint,
+            
+            collectionView.topAnchor.constraint(equalTo: toggleButton.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.heightAnchor.constraint(equalToConstant: 86)
+            collectionViewHeightConstraint,
+            
+            keyboardTopConstraint,
+            keyboardView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            keyboardView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            keyboardView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
         // Setup keyboard switcher button
         nextKeyboardButton = UIButton(type: .system)
         nextKeyboardButton.setTitle("🌐", for: .normal)
         nextKeyboardButton.titleLabel?.font = .systemFont(ofSize: 20)
-        nextKeyboardButton.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
+        nextKeyboardButton.addTarget(self, action: #selector(advanceToNextInputMode), for: .touchUpInside)
         
         view.addSubview(nextKeyboardButton)
         nextKeyboardButton.translatesAutoresizingMaskIntoConstraints = false
@@ -72,6 +121,111 @@ class KeyboardViewController: UIInputViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         nextKeyboardButton.isHidden = !needsInputModeSwitchKey
+        updateHistoryViewVisibility()
+    }
+    
+    @objc private func toggleHistoryView() {
+        isHistoryExpanded.toggle()
+        updateHistoryViewVisibility()
+        
+        // Animate the toggle button rotation
+        UIView.animate(withDuration: 0.3) {
+            self.toggleButton.transform = self.isHistoryExpanded ? 
+                CGAffineTransform(rotationAngle: .pi) : .identity
+        }
+    }
+    
+    private func updateHistoryViewVisibility() {
+        UIView.animate(withDuration: 0.3) {
+            // Update heights
+            self.toggleButtonHeightConstraint.constant = 24 // Keep toggle button height constant
+            self.collectionViewHeightConstraint.constant = self.isHistoryExpanded ? self.expandedHeight : 0
+            
+            // Update visibility
+            self.collectionView.isHidden = !self.isHistoryExpanded
+            self.collectionView.alpha = self.isHistoryExpanded ? 1.0 : 0.0
+            
+            // Force layout update
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    private func createKeyboardView() -> UIView {
+        let keyboardView = UIView()
+        keyboardView.backgroundColor = UIColor(red: 209/255, green: 212/255, blue: 217/255, alpha: 1.0) // iOS keyboard gray
+        
+        // Define key layouts
+        let layout = [
+            ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+            ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+            ["⇧", "z", "x", "c", "v", "b", "n", "m", "⌫"],
+            ["123", "🌐", "space", "return"]
+        ]
+        
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 6
+        stackView.distribution = .fillEqually
+        
+        for row in layout {
+            let rowStack = UIStackView()
+            rowStack.axis = .horizontal
+            rowStack.spacing = 4
+            rowStack.distribution = .fillEqually
+            
+            for key in row {
+                let button = UIButton(type: .system)
+                button.setTitle(key, for: .normal)
+                button.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+                button.layer.cornerRadius = 5
+                button.titleLabel?.font = .systemFont(ofSize: 18)
+                button.tintColor = .black // iOS keyboard text color
+                
+                if key == "space" {
+                    button.setTitle(" ", for: .normal)
+                }
+                
+                button.addTarget(self, action: #selector(keyPressed(_:)), for: .touchUpInside)
+                rowStack.addArrangedSubview(button)
+            }
+            
+            stackView.addArrangedSubview(rowStack)
+        }
+        
+        keyboardView.addSubview(stackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: keyboardView.topAnchor, constant: 8),
+            stackView.leadingAnchor.constraint(equalTo: keyboardView.leadingAnchor, constant: 4),
+            stackView.trailingAnchor.constraint(equalTo: keyboardView.trailingAnchor, constant: -4),
+            stackView.bottomAnchor.constraint(equalTo: keyboardView.bottomAnchor, constant: -8)
+        ])
+        
+        return keyboardView
+    }
+    
+    @objc private func keyPressed(_ sender: UIButton) {
+        guard let key = sender.title(for: .normal) else { return }
+        
+        switch key {
+        case "⌫":
+            textDocumentProxy.deleteBackward()
+        case "⇧":
+            // TODO: Implement shift functionality
+            break
+        case "123":
+            // TODO: Implement number pad
+            break
+        case "🌐":
+            // Use the advanceToNextInputMode method instead
+            advanceToNextInputMode()
+        case "return":
+            textDocumentProxy.insertText("\n")
+        case "space":
+            textDocumentProxy.insertText(" ")
+        default:
+            textDocumentProxy.insertText(key)
+        }
     }
     
     override func textWillChange(_ textInput: UITextInput?) {}
@@ -97,10 +251,7 @@ extension KeyboardViewController: UICollectionViewDelegate, UICollectionViewData
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ClipboardItemCell", for: indexPath) as! ClipboardItemCell
         let item = clipboardManager.clipboardItems[indexPath.item]
         if case .text(let text) = item.content {
-            cell.configure(with: text) { [weak self] in
-                self?.clipboardManager.deleteItem(item)
-                collectionView.reloadData()
-            }
+            cell.configure(with: text)
         }
         return cell
     }
@@ -123,15 +274,6 @@ class ClipboardItemCell: UICollectionViewCell {
         return label
     }()
     
-    private let deleteButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        button.tintColor = .systemRed
-        return button
-    }()
-    
-    var onDelete: (() -> Void)?
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -142,37 +284,23 @@ class ClipboardItemCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        contentView.backgroundColor = .secondarySystemGroupedBackground
+        contentView.backgroundColor = UIColor.white.withAlphaComponent(0.8)
         contentView.layer.cornerRadius = 8
         contentView.layer.masksToBounds = true
         
         contentView.addSubview(textLabel)
-        contentView.addSubview(deleteButton)
         
         textLabel.translatesAutoresizingMaskIntoConstraints = false
-        deleteButton.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             textLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
             textLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
-            textLabel.trailingAnchor.constraint(equalTo: deleteButton.leadingAnchor, constant: -8),
-            textLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            
-            deleteButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            deleteButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
-            deleteButton.widthAnchor.constraint(equalToConstant: 24),
-            deleteButton.heightAnchor.constraint(equalToConstant: 24)
+            textLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            textLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
         ])
-        
-        deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
     }
     
-    func configure(with text: String, onDelete: @escaping () -> Void) {
+    func configure(with text: String) {
         textLabel.text = text
-        self.onDelete = onDelete
-    }
-    
-    @objc private func deleteButtonTapped() {
-        onDelete?()
     }
 }
