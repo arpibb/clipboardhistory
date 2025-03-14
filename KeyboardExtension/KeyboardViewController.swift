@@ -141,34 +141,26 @@ class KeyboardViewController: UIInputViewController {
     @objc private func toggleHistoryView() {
         isHistoryExpanded.toggle()
         updateHistoryViewVisibility()
-        
-        // Animate the toggle button rotation
-        UIView.animate(withDuration: 0.3) {
-            self.toggleButton.transform = self.isHistoryExpanded ? 
-                CGAffineTransform(rotationAngle: .pi) : .identity
-        }
     }
     
     private func updateHistoryViewVisibility() {
-        UIView.animate(withDuration: 0.3) {
-            // Update heights
-            self.toggleButtonHeightConstraint.constant = 24 // Keep toggle button height constant
-            self.collectionViewHeightConstraint.constant = self.isHistoryExpanded ? self.expandedHeight : 0
-            
-            // Update visibility
-            self.collectionView.isHidden = !self.isHistoryExpanded
-            self.collectionView.alpha = self.isHistoryExpanded ? 1.0 : 0.0
-            
-            // Rotate chevron
-            self.toggleButton.transform = self.isHistoryExpanded ? 
-                CGAffineTransform(rotationAngle: .pi) : .identity
-            
-            // Update label
-            self.toggleLabel.text = self.isHistoryExpanded ? "Close History" : "Copy History"
-            
-            // Force layout update
-            self.view.layoutIfNeeded()
-        }
+        // Update heights
+        toggleButtonHeightConstraint.constant = 24 // Keep toggle button height constant
+        collectionViewHeightConstraint.constant = isHistoryExpanded ? expandedHeight : 0
+        
+        // Update visibility
+        collectionView.isHidden = !isHistoryExpanded
+        collectionView.alpha = isHistoryExpanded ? 1.0 : 0.0
+        
+        // Rotate chevron
+        toggleButton.transform = isHistoryExpanded ? 
+            CGAffineTransform(rotationAngle: .pi) : .identity
+        
+        // Update label
+        toggleLabel.text = isHistoryExpanded ? "Close History" : "Copy History"
+        
+        // Force layout update
+        view.layoutIfNeeded()
     }
     
     private func createKeyboardView() -> UIView {
