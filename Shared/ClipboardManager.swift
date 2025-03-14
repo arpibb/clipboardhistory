@@ -79,29 +79,45 @@ public class ClipboardManager: ObservableObject {
     }
     
     func startMonitoring() {
-        // Set up a timer to check clipboard periodically
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            self?.checkClipboard()
+        // Request clipboard permission explicitly
+        requestClipboardPermission { [weak self] in
+            // Set up a timer to check clipboard periodically
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                self?.checkClipboard()
+            }
+        }
+    }
+    
+    private func requestClipboardPermission(completion: @escaping () -> Void) {
+        // Trigger the clipboard permission dialog by attempting to access it
+        DispatchQueue.main.async {
+            // This will trigger the permission prompt
+            let _ = UIPasteboard.general.string
+            completion()
         }
     }
     
     private func checkClipboard() {
-        let clipboard = UIPasteboard.general
-        
-        let newContent: ClipboardContent?
-        
-        if let text = clipboard.string?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
-            newContent = .text(text)
-        } else if let image = clipboard.image {
-            newContent = .image(image)
-        } else {
-            newContent = nil
-        }
-        
-        // Only add if content is different from last check and not empty
-        if let content = newContent, content != lastContent {
-            lastContent = content
-            addItem(ClipboardItem(content: content))
+        // Ensure we're on the main thread when accessing clipboard
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            let clipboard = UIPasteboard.general
+            
+            let newContent: ClipboardContent?
+            
+            if let text = clipboard.string?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+                newContent = .text(text)
+            } else if let image = clipboard.image {
+                newContent = .image(image)
+            } else {
+                newContent = nil
+            }
+            
+            // Only add if content is different from last check and not empty
+            if let content = newContent, content != self.lastContent {
+                self.lastContent = content
+                self.addItem(ClipboardItem(content: content))
+            }
         }
     }
     
