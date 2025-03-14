@@ -51,7 +51,7 @@ class KeyboardViewController: UIInputViewController {
         // Setup toggle button
         toggleButton = UIButton(type: .system)
         toggleButton.setImage(UIImage(systemName: "chevron.down"), for: .normal)
-        toggleButton.tintColor = .systemGray // Match iOS keyboard color
+        toggleButton.tintColor = .black
         toggleButton.backgroundColor = .clear // Remove background
         toggleButton.contentEdgeInsets = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
         toggleButton.addTarget(self, action: #selector(toggleHistoryView), for: .touchUpInside)
@@ -60,7 +60,7 @@ class KeyboardViewController: UIInputViewController {
         toggleLabel = UILabel()
         toggleLabel.text = "Clipboard History"
         toggleLabel.font = .systemFont(ofSize: 15)
-        toggleLabel.textColor = .systemGray
+        toggleLabel.textColor = .black
         
         view.addSubview(toggleButton)
         view.addSubview(toggleLabel)
