@@ -37,7 +37,8 @@ public class ClipboardManager: ObservableObject {
             print("⚠️ Warning: Could not access app group defaults, using standard defaults")
         }
         
-        // // Reset any stale data
+        // Force a fresh load from disk
+        defaults.removeSuite(named: "group.com.arpadbencze.clipboardhistory")
         defaults.synchronize()
         
         // Load saved items
@@ -51,6 +52,9 @@ public class ClipboardManager: ObservableObject {
     public func loadSavedItems() {
         // Reset local items
         clipboardItems.removeAll()
+        
+        // Force reload from disk
+        defaults.synchronize()
         
         // Load items from UserDefaults
         if let savedItems = defaults.array(forKey: "clipboardItems") as? [[String: Any]] {
@@ -73,6 +77,12 @@ public class ClipboardManager: ObservableObject {
                 }
                 return nil
             }
+        } else {
+            // If no items found, ensure UserDefaults is really empty
+            defaults.removePersistentDomain(forName: "group.com.arpadbencze.clipboardhistory")
+            defaults.removeSuite(named: "group.com.arpadbencze.clipboardhistory")
+            defaults.removeObject(forKey: "clipboardItems")
+            defaults.synchronize()
         }
     }
     
@@ -161,27 +171,54 @@ public class ClipboardManager: ObservableObject {
             if let content = newContent, content != self.lastContent {
                 self.lastContent = content
                 let newItem = ClipboardItem(content: content)
-                self.addItem(newItem)
+                
+                // Remove any existing items with the same content
+                self.clipboardItems.removeAll(where: { $0.content == newItem.content })
+                
+                // Add new item at the beginning
+                self.clipboardItems.insert(newItem, at: 0)
+                
+                // Enforce item limit
+                if self.clipboardItems.count > ClipboardManager.maxItems {
+                    self.clipboardItems = Array(self.clipboardItems.prefix(ClipboardManager.maxItems))
+                }
+                
+                // Save to UserDefaults and notify
+                let itemDicts = self.clipboardItems.map { item -> [String: Any] in
+                    var dict: [String: Any] = [
+                        "id": item.id.uuidString,
+                        "timestamp": item.timestamp
+                    ]
+                    
+                    switch item.content {
+                    case .text(let text):
+                        dict["text"] = text
+                    case .image(let image):
+                        if let imageData = image.pngData() {
+                            dict["imageData"] = imageData
+                        }
+                    }
+                    
+                    return dict
+                }
+                
+                // Save to UserDefaults
+                self.defaults.set(itemDicts, forKey: "clipboardItems")
+                self.defaults.synchronize()
+                
+                // Post notification
+                NotificationCenter.default.post(
+                    name: ClipboardManager.clipboardChangedNotification,
+                    object: self,
+                    userInfo: ["itemCount": self.clipboardItems.count]
+                )
             }
         }
     }
     
     private func addItem(_ item: ClipboardItem) {
-        DispatchQueue.main.async {
-            // Remove any existing items with the same content
-            self.clipboardItems.removeAll(where: { $0.content == item.content })
-            
-            // Add new item at the beginning
-            self.clipboardItems.insert(item, at: 0)
-            
-            // Enforce item limit
-            if self.clipboardItems.count > ClipboardManager.maxItems {
-                self.clipboardItems = Array(self.clipboardItems.prefix(ClipboardManager.maxItems))
-            }
-
-            // Save and notify
-            self.saveItems()
-        }
+        // This is now handled directly in checkClipboard
+        assertionFailure("addItem should not be called directly - use checkClipboard instead")
     }
     
     public func copyToClipboard(_ item: ClipboardItem) {
@@ -200,11 +237,7 @@ public class ClipboardManager: ObservableObject {
             // Remove item from local array
             self.clipboardItems.removeAll { $0.id == item.id }
             
-            // Clear existing items from UserDefaults
-            self.defaults.removeObject(forKey: "clipboardItems")
-            self.defaults.synchronize()
-            
-            // Save updated items
+            // Prepare the items to save
             let itemDicts = self.clipboardItems.map { item -> [String: Any] in
                 var dict: [String: Any] = [
                     "id": item.id.uuidString,
@@ -223,7 +256,11 @@ public class ClipboardManager: ObservableObject {
                 return dict
             }
             
-            // Save and sync
+            // Force a clean slate before saving
+            self.defaults.removeSuite(named: "group.com.arpadbencze.clipboardhistory")
+            self.defaults.removeObject(forKey: "clipboardItems")
+            
+            // Save new items
             self.defaults.set(itemDicts, forKey: "clipboardItems")
             self.defaults.synchronize()
             
@@ -244,7 +281,9 @@ public class ClipboardManager: ObservableObject {
             // Clear local items
             self.clipboardItems.removeAll()
             
-            // Clear UserDefaults
+            // Aggressively clear UserDefaults
+            self.defaults.removePersistentDomain(forName: "group.com.arpadbencze.clipboardhistory")
+            self.defaults.removeSuite(named: "group.com.arpadbencze.clipboardhistory")
             self.defaults.removeObject(forKey: "clipboardItems")
             self.defaults.synchronize()
             

@@ -38,12 +38,12 @@ class KeyboardViewController: UIInputViewController {
     }
     
     private func setupClipboardManager() {
+        // Remove any existing observers and cleanup
+        cleanup()
+
         // Use the shared clipboard manager from the app group
         clipboardManager = ClipboardManager.shared
         clipboardManager.loadSavedItems()
-        
-        // Remove any existing observers
-        NotificationCenter.default.removeObserver(self)
         
         // Listen for clipboard changes
         NotificationCenter.default.addObserver(
@@ -68,6 +68,8 @@ class KeyboardViewController: UIInputViewController {
             name: UIResponder.keyboardWillHideNotification,
             object: nil
         )
+        
+        print("⌨️ Keyboard setup complete - loaded \(clipboardManager.clipboardItems.count) items")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -78,19 +80,23 @@ class KeyboardViewController: UIInputViewController {
     private func cleanup() {
         // Clean up when keyboard is dismissed
         NotificationCenter.default.removeObserver(self)
+        
+        // Reset manager
         clipboardManager = nil
-        print("⌨️ Keyboard cleanup - removing observers and resetting manager")
+        print("⌨️ Keyboard cleanup - removed observers and reset manager")
     }
     
     @objc private func handleClipboardChange(_ notification: Notification) {
-        // Force reload the items from UserDefaults
-        clipboardManager.loadSavedItems()
-        collectionView.reloadData()
-        
-        // Log item count for debugging
-        if let userInfo = notification.userInfo,
-           let itemCount = userInfo["itemCount"] as? Int {
-            print("📋 Clipboard items updated: \(itemCount) items")
+        // Update UI on main thread
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            // Force reload the items from UserDefaults
+            self.clipboardManager.loadSavedItems()
+            self.collectionView.reloadData()
+            
+            // Log item count for debugging
+            print("📋 Keyboard has \(self.clipboardManager.clipboardItems.count) items")
         }
     }
     
