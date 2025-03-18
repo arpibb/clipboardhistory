@@ -10,6 +10,10 @@ import SwiftUI
 import UIKit
 
 public class ClipboardManager: ObservableObject {
+    // MARK: - Constants
+    static let appGroupIdentifier = "group.com.arpadbencze.clipboardhistory"
+    static let clipboardItemsKey = "clipboardItems"
+    static let itemCountKey = "itemCount"
     // Notification name for clipboard changes
     public static let clipboardChangedNotification = Notification.Name("com.arpadbencze.clipboardhistory.clipboardChanged")
     
@@ -30,7 +34,7 @@ public class ClipboardManager: ObservableObject {
     
     public init() {
         // Initialize with app group UserDefaults
-        if let groupDefaults = UserDefaults(suiteName: "group.com.arpadbencze.clipboardhistory") {
+        if let groupDefaults = UserDefaults(suiteName: ClipboardManager.appGroupIdentifier) {
             self.defaults = groupDefaults
         } else {
             self.defaults = UserDefaults.standard
@@ -50,10 +54,10 @@ public class ClipboardManager: ObservableObject {
     
     public func loadSavedItems() {
         // Reset local items
-        clipboardItems.removeAll()
+        // clipboardItems.removeAll()
         
         // Load items from UserDefaults
-        if let savedItems = defaults.array(forKey: "clipboardItems") as? [[String: Any]] {
+        if let savedItems = defaults.array(forKey: ClipboardManager.clipboardItemsKey) as? [[String: Any]] {
             // Enforce item limit
             let limitedItems = savedItems.prefix(ClipboardManager.maxItems)
             // Sort items by timestamp (newest first)
@@ -96,7 +100,7 @@ public class ClipboardManager: ObservableObject {
         }
         
         // Save items in a single operation
-        defaults.set(itemDicts, forKey: "clipboardItems")
+        defaults.set(itemDicts, forKey: ClipboardManager.clipboardItemsKey)
         defaults.synchronize()
         
         // Notify other instances about the change
@@ -105,7 +109,7 @@ public class ClipboardManager: ObservableObject {
             NotificationCenter.default.post(
                 name: ClipboardManager.clipboardChangedNotification,
                 object: self,
-                userInfo: ["itemCount": self.clipboardItems.count]
+                userInfo: [ClipboardManager.itemCountKey: self.clipboardItems.count]
             )
         }
     }
@@ -166,7 +170,7 @@ public class ClipboardManager: ObservableObject {
         }
     }
     
-    private func addItem(_ item: ClipboardItem) {
+    public func addItem(_ item: ClipboardItem) {
         DispatchQueue.main.async {
             // Remove any existing items with the same content
             self.clipboardItems.removeAll(where: { $0.content == item.content })
@@ -201,7 +205,7 @@ public class ClipboardManager: ObservableObject {
             self.clipboardItems.removeAll { $0.id == item.id }
             
             // Clear existing items from UserDefaults
-            self.defaults.removeObject(forKey: "clipboardItems")
+            self.defaults.removeObject(forKey: ClipboardManager.clipboardItemsKey)
             self.defaults.synchronize()
             
             // Save updated items
@@ -224,14 +228,14 @@ public class ClipboardManager: ObservableObject {
             }
             
             // Save and sync
-            self.defaults.set(itemDicts, forKey: "clipboardItems")
+            self.defaults.set(itemDicts, forKey: ClipboardManager.clipboardItemsKey)
             self.defaults.synchronize()
             
             // Notify all instances
             NotificationCenter.default.post(
                 name: ClipboardManager.clipboardChangedNotification,
                 object: self,
-                userInfo: ["itemCount": self.clipboardItems.count]
+                userInfo: [ClipboardManager.itemCountKey: self.clipboardItems.count]
             )
         }
     }
@@ -245,7 +249,7 @@ public class ClipboardManager: ObservableObject {
             self.clipboardItems.removeAll()
             
             // Clear UserDefaults
-            self.defaults.removeObject(forKey: "clipboardItems")
+            self.defaults.removeObject(forKey: ClipboardManager.clipboardItemsKey)
             self.defaults.synchronize()
             
             // Store the current clipboard content as lastContent
@@ -260,7 +264,7 @@ public class ClipboardManager: ObservableObject {
             NotificationCenter.default.post(
                 name: ClipboardManager.clipboardChangedNotification,
                 object: self,
-                userInfo: ["itemCount": 0]
+                userInfo: [ClipboardManager.itemCountKey: 0]
             )
             
             // Resume monitoring after a short delay

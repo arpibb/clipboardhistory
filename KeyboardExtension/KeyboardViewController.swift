@@ -39,8 +39,15 @@ class KeyboardViewController: UIInputViewController {
     
     private func setupClipboardManager() {
         // Use the shared clipboard manager from the app group
-        clipboardManager = ClipboardManager.shared
-        clipboardManager.loadSavedItems()
+        if clipboardManager == nil {
+            clipboardManager = ClipboardManager.shared
+            clipboardManager.loadSavedItems()
+            print("⌨️ Keyboard setup - initialized clipboard manager")
+        } else {
+            // Just refresh the items if manager already exists
+            clipboardManager.loadSavedItems()
+            print("⌨️ Keyboard setup - refreshed clipboard items")
+        }
         
         // Remove any existing observers
         NotificationCenter.default.removeObserver(self)
@@ -78,8 +85,7 @@ class KeyboardViewController: UIInputViewController {
     private func cleanup() {
         // Clean up when keyboard is dismissed
         NotificationCenter.default.removeObserver(self)
-        clipboardManager = nil
-        print("⌨️ Keyboard cleanup - removing observers and resetting manager")
+        print("⌨️ Keyboard cleanup - removing observers")
     }
     
     @objc private func handleClipboardChange(_ notification: Notification) {
@@ -89,7 +95,7 @@ class KeyboardViewController: UIInputViewController {
         
         // Log item count for debugging
         if let userInfo = notification.userInfo,
-           let itemCount = userInfo["itemCount"] as? Int {
+           let itemCount = userInfo[ClipboardManager.itemCountKey] as? Int {
             print("📋 Clipboard items updated: \(itemCount) items")
         }
     }
