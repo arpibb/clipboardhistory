@@ -11,16 +11,12 @@ class KeyboardViewController: UIInputViewController {
     private var clipboardManager: ClipboardManager!
     private var collectionView: UICollectionView!
     private var nextKeyboardButton: UIButton!
-    private var toggleButton: UIButton!
-    private var toggleLabel: UILabel!
     private var keyboardView: UIView!
-    private var isHistoryExpanded: Bool = false
     
-    private let collapsedHeight: CGFloat = 24 // Height for toggle button + padding
-    private let expandedHeight: CGFloat = 56 // Height for clipboard items
+    private let clipboardHistoryHeight: CGFloat = 56 // Fixed height for clipboard items
     
     private var collectionViewHeightConstraint: NSLayoutConstraint!
-    private var toggleButtonHeightConstraint: NSLayoutConstraint!
+
     private var keyboardTopConstraint: NSLayoutConstraint!
     
     override func viewDidLoad() {
@@ -28,11 +24,10 @@ class KeyboardViewController: UIInputViewController {
         setupUI()
         setupClipboardManager()
         
-        // Set initial state to collapsed
-        toggleButtonHeightConstraint.constant = 24 // Keep toggle button visible
-        collectionViewHeightConstraint.constant = 0
-        collectionView.isHidden = true
-        collectionView.alpha = 0
+        // Always show clipboard history
+        collectionViewHeightConstraint.constant = clipboardHistoryHeight
+        collectionView.isHidden = false
+        collectionView.alpha = 1
         
 
     }
@@ -118,24 +113,14 @@ class KeyboardViewController: UIInputViewController {
         
 
         
-        // Setup toggle button
-        toggleButton = UIButton(type: .system)
-        toggleButton.setImage(UIImage(systemName: "chevron.down"), for: .normal)
-        toggleButton.tintColor = .black
-        toggleButton.backgroundColor = .clear // Remove background
-        toggleButton.contentEdgeInsets = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
-        toggleButton.addTarget(self, action: #selector(toggleHistoryView), for: .touchUpInside)
+        // Setup title label
+        let titleLabel = UILabel()
+        titleLabel.text = "Copy History"
+        titleLabel.font = .systemFont(ofSize: 15)
+        titleLabel.textColor = .black
         
-        // Setup toggle label
-        toggleLabel = UILabel()
-        toggleLabel.text = "Clipboard History"
-        toggleLabel.font = .systemFont(ofSize: 15)
-        toggleLabel.textColor = .black
-        
-        view.addSubview(toggleButton)
-        view.addSubview(toggleLabel)
-        toggleButton.translatesAutoresizingMaskIntoConstraints = false
-        toggleLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(titleLabel)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         // Setup collection view
         let layout = UICollectionViewFlowLayout()
@@ -162,20 +147,14 @@ class KeyboardViewController: UIInputViewController {
         keyboardView.translatesAutoresizingMaskIntoConstraints = false
         
         // Store constraints that we'll need to modify
-        toggleButtonHeightConstraint = toggleButton.heightAnchor.constraint(equalToConstant: 20)
-        collectionViewHeightConstraint = collectionView.heightAnchor.constraint(equalToConstant: expandedHeight)
+        collectionViewHeightConstraint = collectionView.heightAnchor.constraint(equalToConstant: clipboardHistoryHeight)
         keyboardTopConstraint = keyboardView.topAnchor.constraint(equalTo: collectionView.bottomAnchor)
         
         NSLayoutConstraint.activate([
-            toggleButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
-            toggleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-            toggleButton.widthAnchor.constraint(equalToConstant: 30),
-            toggleButtonHeightConstraint,
+            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
             
-            toggleLabel.centerYAnchor.constraint(equalTo: toggleButton.centerYAnchor),
-            toggleLabel.leadingAnchor.constraint(equalTo: toggleButton.trailingAnchor, constant: 4),
-            
-            collectionView.topAnchor.constraint(equalTo: toggleButton.bottomAnchor),
+            collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionViewHeightConstraint,
@@ -205,33 +184,12 @@ class KeyboardViewController: UIInputViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         nextKeyboardButton.isHidden = !needsInputModeSwitchKey
-        updateHistoryViewVisibility()
+        // Make sure the collection view is visible
+        collectionView.isHidden = false
+        collectionView.alpha = 1
     }
     
-    @objc private func toggleHistoryView() {
-        isHistoryExpanded.toggle()
-        updateHistoryViewVisibility()
-    }
-    
-    private func updateHistoryViewVisibility() {
-        // Update heights
-        toggleButtonHeightConstraint.constant = 24 // Keep toggle button height constant
-        collectionViewHeightConstraint.constant = isHistoryExpanded ? expandedHeight : 0
-        
-        // Update visibility
-        collectionView.isHidden = !isHistoryExpanded
-        collectionView.alpha = isHistoryExpanded ? 1.0 : 0.0
-        
-        // Rotate chevron
-        toggleButton.transform = isHistoryExpanded ? 
-            CGAffineTransform(rotationAngle: .pi) : .identity
-        
-        // Update label
-        toggleLabel.text = isHistoryExpanded ? "Close History" : "Copy History"
-        
-        // Force layout update
-        view.layoutIfNeeded()
-    }
+
     
     private func createKeyboardView() -> UIView {
         let keyboardView = UIView()
