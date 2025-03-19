@@ -12,6 +12,7 @@ class KeyboardViewController: UIInputViewController {
     private var collectionView: UICollectionView!
     private var nextKeyboardButton: UIButton!
     private var keyboardView: UIView!
+    private var titleLabel: UILabel!
     
     private let clipboardHistoryHeight: CGFloat = 56 // Fixed height for clipboard items
     
@@ -24,10 +25,8 @@ class KeyboardViewController: UIInputViewController {
         setupUI()
         setupClipboardManager()
         
-        // Always show clipboard history
-        collectionViewHeightConstraint.constant = clipboardHistoryHeight
+        // Make sure everything is visible
         collectionView.isHidden = false
-        collectionView.alpha = 1
         
 
     }
@@ -114,7 +113,7 @@ class KeyboardViewController: UIInputViewController {
 
         
         // Setup title label
-        let titleLabel = UILabel()
+        titleLabel = UILabel()
         titleLabel.text = "Copy History"
         titleLabel.font = .systemFont(ofSize: 15)
         titleLabel.textColor = .black
@@ -151,9 +150,12 @@ class KeyboardViewController: UIInputViewController {
         keyboardTopConstraint = keyboardView.topAnchor.constraint(equalTo: collectionView.bottomAnchor)
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
+            // Title label at the top
+            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 4),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
+            titleLabel.heightAnchor.constraint(equalToConstant: 20),
             
+            // Collection view below the title
             collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -186,9 +188,8 @@ class KeyboardViewController: UIInputViewController {
         nextKeyboardButton.isHidden = !needsInputModeSwitchKey
         // Make sure the collection view is visible
         collectionView.isHidden = false
-        collectionView.alpha = 1
     }
-    
+
 
     
     private func createKeyboardView() -> UIView {
