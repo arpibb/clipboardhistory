@@ -17,6 +17,15 @@ class KeyboardViewController: UIInputViewController {
     // Track if emoji picker is visible
     private var isEmojiPickerVisible = false
     
+    // Track current interface style
+    private var isDarkMode: Bool {
+        if #available(iOSApplicationExtension 13.0, *) {
+            return self.traitCollection.userInterfaceStyle == .dark
+        } else {
+            return false
+        }
+    }
+    
     private let clipboardHistoryHeight: CGFloat = 56 // Fixed height for clipboard items
     
     private var collectionViewHeightConstraint: NSLayoutConstraint!
@@ -27,6 +36,12 @@ class KeyboardViewController: UIInputViewController {
         super.viewDidLoad()
         setupUI()
         setupClipboardManager()
+        
+        // Initial appearance update
+        updateAppearance()
+        
+        // Note: We detect dark/light mode changes using traitCollectionDidChange method
+        // which is already implemented below
         
         // Make sure everything is visible
         collectionView.isHidden = false
@@ -102,8 +117,109 @@ class KeyboardViewController: UIInputViewController {
         setupClipboardManager()
         collectionView.reloadData()
         
+        // Update appearance for dark/light mode
+        updateAppearance()
+        
         // Log for debugging
         print("⌨️ Keyboard shown - reloading clipboard items")
+    }
+    
+    @objc private func updateAppearance() {
+        // Define iOS keyboard colors based on mode
+        let keyboardBackgroundColor = isDarkMode ? 
+            UIColor(red: 36/255, green: 36/255, blue: 38/255, alpha: 1.0) : 
+            UIColor(red: 209/255, green: 212/255, blue: 217/255, alpha: 1.0)
+        
+        // Regular key colors
+        let regularKeyBgColor = isDarkMode ? 
+            UIColor(red: 52/255, green: 52/255, blue: 54/255, alpha: 1.0) : 
+            UIColor.white
+        let regularKeyTextColor = isDarkMode ? UIColor.white : UIColor.black
+        
+        // Special key colors (shift, backspace, etc.)
+        let specialKeyBgColor = isDarkMode ? 
+            UIColor(red: 66/255, green: 66/255, blue: 68/255, alpha: 1.0) : 
+            UIColor(red: 172/255, green: 180/255, blue: 190/255, alpha: 1.0)
+        let specialKeyTextColor = isDarkMode ? UIColor.white : UIColor.black
+        
+        // Action key colors (return, 123, etc.)
+        let actionKeyBgColor = isDarkMode ? 
+            UIColor(red: 66/255, green: 66/255, blue: 68/255, alpha: 1.0) : 
+            UIColor(red: 172/255, green: 180/255, blue: 190/255, alpha: 1.0)
+        let actionKeyTextColor = isDarkMode ? UIColor.white : UIColor.black
+        
+        // Space bar colors
+        let spaceBarBgColor = regularKeyBgColor
+        
+        // Clipboard item colors
+        let clipboardItemBgColor = isDarkMode ? 
+            UIColor(red: 52/255, green: 52/255, blue: 54/255, alpha: 1.0) : 
+            UIColor.white
+        let clipboardItemTextColor = isDarkMode ? UIColor.white : UIColor.black
+        
+        // Update main view background color
+        view.backgroundColor = keyboardBackgroundColor
+        
+        // Update keyboard background color
+        keyboardView.backgroundColor = keyboardBackgroundColor
+        
+        // Update collection view background
+        collectionView.backgroundColor = keyboardBackgroundColor
+        
+        // Store the colors for cells to use
+        ClipboardItemCell.cellBackgroundColor = clipboardItemBgColor
+        ClipboardItemCell.cellTextColor = clipboardItemTextColor
+        
+        // Update collection view cells
+        collectionView.reloadData()
+        
+        // Update keyboard buttons
+        for subview in keyboardView.subviews {
+            if let stackView = subview as? UIStackView {
+                for rowStack in stackView.arrangedSubviews {
+                    if let rowStackView = rowStack as? UIStackView {
+                        for case let button as UIButton in rowStackView.arrangedSubviews {
+                            // Get the button title to determine its type
+                            let title = button.title(for: .normal) ?? ""
+                            
+                            // Apply appropriate styling based on key type
+                            switch title {
+                            case "⌫", "⇧":
+                                button.backgroundColor = specialKeyBgColor
+                                button.setTitleColor(specialKeyTextColor, for: .normal)
+                            case "123", "go", "return":
+                                button.backgroundColor = actionKeyBgColor
+                                button.setTitleColor(actionKeyTextColor, for: .normal)
+                            case " ": // Space bar
+                                button.backgroundColor = spaceBarBgColor
+                            case "": // Emoji button or other image-based buttons
+                                if button.accessibilityIdentifier == "emojiButton" {
+                                    button.backgroundColor = specialKeyBgColor
+                                    button.tintColor = specialKeyTextColor
+                                } else {
+                                    button.backgroundColor = regularKeyBgColor
+                                    button.setTitleColor(regularKeyTextColor, for: .normal)
+                                }
+                            default: // Regular letter keys
+                                button.backgroundColor = regularKeyBgColor
+                                button.setTitleColor(regularKeyTextColor, for: .normal)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        // Check if the user interface style (dark/light mode) changed
+        if #available(iOSApplicationExtension 13.0, *) {
+            if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                updateAppearance()
+            }
+        }
     }
     
     @objc private func handleKeyboardWillHide(_ notification: Notification) {
@@ -111,7 +227,7 @@ class KeyboardViewController: UIInputViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = UIColor(red: 209/255, green: 212/255, blue: 217/255, alpha: 1.0) // iOS keyboard gray
+        // Background color will be set in updateAppearance()
         
 
         
@@ -126,7 +242,7 @@ class KeyboardViewController: UIInputViewController {
         layout.sectionInset = UIEdgeInsets(top: 4, left: 12, bottom: 4, right: 8)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .clear
+        // Collection view background will be set in updateAppearance()
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(ClipboardItemCell.self, forCellWithReuseIdentifier: "ClipboardItemCell")
@@ -263,7 +379,7 @@ class KeyboardViewController: UIInputViewController {
         emojiButton.addTarget(self, action: #selector(showEmojiPicker), for: .touchUpInside)
         emojiButton.translatesAutoresizingMaskIntoConstraints = false
         let keyboardView = UIView()
-        keyboardView.backgroundColor = UIColor(red: 209/255, green: 212/255, blue: 217/255, alpha: 1.0) // iOS keyboard gray
+        // Background color will be set in updateAppearance()
         
         // Add the emoji button to the keyboard view
         keyboardView.addSubview(emojiButton)
@@ -290,7 +406,7 @@ class KeyboardViewController: UIInputViewController {
             for key in row {
                 let button = UIButton(type: .system)
                 button.setTitle(key, for: .normal)
-                button.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+                // Button background will be set in updateAppearance()
                 
                 // If this is the emoji button, use our existing emojiButton
                 // if key == "emoji" {
@@ -393,7 +509,8 @@ extension KeyboardViewController: UICollectionViewDelegate, UICollectionViewData
         guard let cell = collectionView.cellForItem(at: indexPath) as? ClipboardItemCell else { return }
         UIView.animate(withDuration: 0.1) {
             cell.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-            cell.backgroundColor = UIColor.white.withAlphaComponent(0.6)
+            let highlightColor = self.isDarkMode ? UIColor.black.withAlphaComponent(0.6) : UIColor.white.withAlphaComponent(0.6)
+            cell.backgroundColor = highlightColor
         }
     }
     
@@ -401,7 +518,8 @@ extension KeyboardViewController: UICollectionViewDelegate, UICollectionViewData
         guard let cell = collectionView.cellForItem(at: indexPath) as? ClipboardItemCell else { return }
         UIView.animate(withDuration: 0.1) {
             cell.transform = .identity
-            cell.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+            let normalColor = self.isDarkMode ? UIColor.black.withAlphaComponent(0.8) : UIColor.white.withAlphaComponent(0.8)
+            cell.backgroundColor = normalColor
         }
     }
     
@@ -416,11 +534,14 @@ extension KeyboardViewController: UICollectionViewDelegate, UICollectionViewData
 
 // MARK: - Clipboard Item Cell
 class ClipboardItemCell: UICollectionViewCell {
+    // Static properties for theming
+    static var cellBackgroundColor: UIColor = .white
+    static var cellTextColor: UIColor = .black
+    
     private let textLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 3
         label.font = .systemFont(ofSize: 14)
-        label.textColor = .label
         return label
     }()
     
@@ -434,7 +555,6 @@ class ClipboardItemCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        backgroundColor = UIColor.white.withAlphaComponent(0.8)
         layer.cornerRadius = 8
         contentView.layer.cornerRadius = 8
         contentView.layer.masksToBounds = true
@@ -452,7 +572,20 @@ class ClipboardItemCell: UICollectionViewCell {
         ])
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // Apply current theme colors
+        applyTheme()
+    }
+    
     func configure(with text: String) {
         textLabel.text = text
+        // Apply current theme colors
+        applyTheme()
+    }
+    
+    private func applyTheme() {
+        backgroundColor = ClipboardItemCell.cellBackgroundColor
+        textLabel.textColor = ClipboardItemCell.cellTextColor
     }
 }
