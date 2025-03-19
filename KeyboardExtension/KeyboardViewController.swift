@@ -323,41 +323,80 @@ class KeyboardViewController: UIInputViewController {
         // Create a simple emoji grid
         let commonEmojis = ["😀", "😂", "😍", "👍", "👋", "🙏", "❤️", "🔥", "✅", "⭐"]
         
-        // Create emoji grid
+        // Create emoji grid with proper theming
         let emojiContainer = UIView()
         emojiContainer.tag = 999
-        emojiContainer.backgroundColor = .systemBackground
+        
+        // Use the same background color as the keyboard for the emoji container
+        let keyboardBgColor = isDarkMode ? 
+            UIColor(red: 36/255, green: 36/255, blue: 38/255, alpha: 1.0) : 
+            UIColor(red: 209/255, green: 212/255, blue: 217/255, alpha: 1.0)
+        emojiContainer.backgroundColor = keyboardBgColor
+        
         emojiContainer.translatesAutoresizingMaskIntoConstraints = false
         keyboardView.addSubview(emojiContainer)
         
+        // Position the emoji container to cover the keyboard area
         NSLayoutConstraint.activate([
-            emojiContainer.topAnchor.constraint(equalTo: keyboardView.topAnchor, constant: 8),
-            emojiContainer.leadingAnchor.constraint(equalTo: keyboardView.leadingAnchor, constant: 8),
-            emojiContainer.trailingAnchor.constraint(equalTo: keyboardView.trailingAnchor, constant: -8),
-            emojiContainer.heightAnchor.constraint(equalToConstant: 40)
+            emojiContainer.topAnchor.constraint(equalTo: keyboardView.topAnchor),
+            emojiContainer.leadingAnchor.constraint(equalTo: keyboardView.leadingAnchor),
+            emojiContainer.trailingAnchor.constraint(equalTo: keyboardView.trailingAnchor),
+            emojiContainer.heightAnchor.constraint(equalToConstant: 50)
         ])
         
         // Add emoji buttons
         let buttonSize: CGFloat = 32
         let spacing: CGFloat = 8
         
+        // Create a scroll view for emojis
+        let scrollView = UIScrollView()
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        emojiContainer.addSubview(scrollView)
+        
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: emojiContainer.topAnchor, constant: 8),
+            scrollView.leadingAnchor.constraint(equalTo: emojiContainer.leadingAnchor, constant: 8),
+            scrollView.trailingAnchor.constraint(equalTo: emojiContainer.trailingAnchor, constant: -8),
+            scrollView.bottomAnchor.constraint(equalTo: emojiContainer.bottomAnchor, constant: -8)
+        ])
+        
+        // Content view for the scroll view
+        let contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentView)
+        
+        // Set up the content view constraints
+        NSLayoutConstraint.activate([
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.heightAnchor.constraint(equalTo: scrollView.heightAnchor)
+        ])
+        
+        // Calculate total width needed
+        let totalWidth = CGFloat(commonEmojis.count) * (buttonSize + spacing) - spacing
+        contentView.widthAnchor.constraint(equalToConstant: totalWidth).isActive = true
+        
         for (index, emoji) in commonEmojis.enumerated() {
             let button = UIButton(type: .system)
             button.setTitle(emoji, for: .normal)
             button.titleLabel?.font = .systemFont(ofSize: 24)
+            
+            // Use transparent background for emoji buttons
             button.backgroundColor = .clear
-            button.layer.cornerRadius = buttonSize / 2
             button.tag = index
             
             // Add action to insert emoji
             button.addTarget(self, action: #selector(insertEmoji(_:)), for: .touchUpInside)
             
-            emojiContainer.addSubview(button)
+            contentView.addSubview(button)
             button.translatesAutoresizingMaskIntoConstraints = false
             
             NSLayoutConstraint.activate([
-                button.topAnchor.constraint(equalTo: emojiContainer.topAnchor),
-                button.leadingAnchor.constraint(equalTo: emojiContainer.leadingAnchor, constant: CGFloat(index) * (buttonSize + spacing)),
+                button.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+                button.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: CGFloat(index) * (buttonSize + spacing)),
                 button.widthAnchor.constraint(equalToConstant: buttonSize),
                 button.heightAnchor.constraint(equalToConstant: buttonSize)
             ])
