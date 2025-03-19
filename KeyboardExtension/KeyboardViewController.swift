@@ -413,8 +413,6 @@ class KeyboardViewController: UIInputViewController {
     private func createKeyboardView() -> UIView {
         // Create the emoji button first
         emojiButton = UIButton(type: .system)
-        emojiButton.setTitle("emoji", for: .normal)
-        emojiButton.titleLabel?.font = .systemFont(ofSize: 20)
         emojiButton.addTarget(self, action: #selector(showEmojiPicker), for: .touchUpInside)
         emojiButton.translatesAutoresizingMaskIntoConstraints = false
         let keyboardView = UIView()
