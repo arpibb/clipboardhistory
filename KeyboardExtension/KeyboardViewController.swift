@@ -13,7 +13,6 @@ class KeyboardViewController: UIInputViewController {
     private var nextKeyboardButton: UIButton!
     private var emojiButton: UIButton!
     private var keyboardView: UIView!
-    private var titleLabel: UILabel!
     
     // Track if emoji picker is visible
     private var isEmojiPickerVisible = false
@@ -116,14 +115,7 @@ class KeyboardViewController: UIInputViewController {
         
 
         
-        // Setup title label
-        titleLabel = UILabel()
-        titleLabel.text = "Copy History"
-        titleLabel.font = .systemFont(ofSize: 15)
-        titleLabel.textColor = .black
-        
-        view.addSubview(titleLabel)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        // No title label - removed for cleaner UI
         
         // Setup collection view
         let layout = UICollectionViewFlowLayout()
@@ -131,7 +123,7 @@ class KeyboardViewController: UIInputViewController {
         layout.itemSize = CGSize(width: 120, height: 40)
         layout.minimumInteritemSpacing = 8
         layout.minimumLineSpacing = 8
-        layout.sectionInset = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+        layout.sectionInset = UIEdgeInsets(top: 4, left: 12, bottom: 4, right: 8)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
@@ -154,14 +146,9 @@ class KeyboardViewController: UIInputViewController {
         keyboardTopConstraint = keyboardView.topAnchor.constraint(equalTo: collectionView.bottomAnchor)
         
         NSLayoutConstraint.activate([
-            // Title label at the top
-            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 4),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
-            titleLabel.heightAnchor.constraint(equalToConstant: 20),
-            
-            // Collection view below the title
-            collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            // Collection view at the top with more left padding
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 4),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionViewHeightConstraint,
             
