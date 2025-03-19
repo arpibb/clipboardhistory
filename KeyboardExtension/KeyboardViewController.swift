@@ -11,8 +11,12 @@ class KeyboardViewController: UIInputViewController {
     private var clipboardManager: ClipboardManager!
     private var collectionView: UICollectionView!
     private var nextKeyboardButton: UIButton!
+    private var emojiButton: UIButton!
     private var keyboardView: UIView!
     private var titleLabel: UILabel!
+    
+    // Track if emoji picker is visible
+    private var isEmojiPickerVisible = false
     
     private let clipboardHistoryHeight: CGFloat = 56 // Fixed height for clipboard items
     
@@ -175,11 +179,15 @@ class KeyboardViewController: UIInputViewController {
         
         view.addSubview(nextKeyboardButton)
         nextKeyboardButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        // We'll add the emoji button to the keyboard view later
         NSLayoutConstraint.activate([
             nextKeyboardButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
             nextKeyboardButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
             nextKeyboardButton.widthAnchor.constraint(equalToConstant: 30),
-            nextKeyboardButton.heightAnchor.constraint(equalToConstant: 30)
+            nextKeyboardButton.heightAnchor.constraint(equalToConstant: 30),
+            
+
         ])
     }
     
@@ -189,19 +197,96 @@ class KeyboardViewController: UIInputViewController {
         // Make sure the collection view is visible
         collectionView.isHidden = false
     }
-
-
+    
+    @objc private func showEmojiPicker() {
+        // Toggle emoji picker visibility
+        isEmojiPickerVisible = !isEmojiPickerVisible
+        print("loading emojis: \(isEmojiPickerVisible)")  
+        
+        // Remove any existing emoji views first
+        for subview in keyboardView.subviews {
+            if subview.tag == 999 { // Tag for emoji views
+                subview.removeFromSuperview()
+                print("removing emojis")  
+            }
+        }
+        
+        // If we're toggling off, just return after removing
+        if !isEmojiPickerVisible {
+            print("returning simply")  
+            return
+        }
+        
+        // Create a simple emoji grid
+        let commonEmojis = ["😀", "😂", "😍", "👍", "👋", "🙏", "❤️", "🔥", "✅", "⭐"]
+        
+        // Create emoji grid
+        let emojiContainer = UIView()
+        emojiContainer.tag = 999
+        emojiContainer.backgroundColor = .systemBackground
+        emojiContainer.translatesAutoresizingMaskIntoConstraints = false
+        keyboardView.addSubview(emojiContainer)
+        
+        NSLayoutConstraint.activate([
+            emojiContainer.topAnchor.constraint(equalTo: keyboardView.topAnchor, constant: 8),
+            emojiContainer.leadingAnchor.constraint(equalTo: keyboardView.leadingAnchor, constant: 8),
+            emojiContainer.trailingAnchor.constraint(equalTo: keyboardView.trailingAnchor, constant: -8),
+            emojiContainer.heightAnchor.constraint(equalToConstant: 40)
+        ])
+        
+        // Add emoji buttons
+        let buttonSize: CGFloat = 32
+        let spacing: CGFloat = 8
+        
+        for (index, emoji) in commonEmojis.enumerated() {
+            let button = UIButton(type: .system)
+            button.setTitle(emoji, for: .normal)
+            button.titleLabel?.font = .systemFont(ofSize: 24)
+            button.backgroundColor = .clear
+            button.layer.cornerRadius = buttonSize / 2
+            button.tag = index
+            
+            // Add action to insert emoji
+            button.addTarget(self, action: #selector(insertEmoji(_:)), for: .touchUpInside)
+            
+            emojiContainer.addSubview(button)
+            button.translatesAutoresizingMaskIntoConstraints = false
+            
+            NSLayoutConstraint.activate([
+                button.topAnchor.constraint(equalTo: emojiContainer.topAnchor),
+                button.leadingAnchor.constraint(equalTo: emojiContainer.leadingAnchor, constant: CGFloat(index) * (buttonSize + spacing)),
+                button.widthAnchor.constraint(equalToConstant: buttonSize),
+                button.heightAnchor.constraint(equalToConstant: buttonSize)
+            ])
+        }
+    }
+    
+    @objc private func insertEmoji(_ sender: UIButton) {
+        guard let emoji = sender.title(for: .normal) else { return }
+        
+        // Insert the emoji into the text document
+        textDocumentProxy.insertText(emoji)
+    }
     
     private func createKeyboardView() -> UIView {
+        // Create the emoji button first
+        emojiButton = UIButton(type: .system)
+        emojiButton.setTitle("emoji", for: .normal)
+        emojiButton.titleLabel?.font = .systemFont(ofSize: 20)
+        emojiButton.addTarget(self, action: #selector(showEmojiPicker), for: .touchUpInside)
+        emojiButton.translatesAutoresizingMaskIntoConstraints = false
         let keyboardView = UIView()
         keyboardView.backgroundColor = UIColor(red: 209/255, green: 212/255, blue: 217/255, alpha: 1.0) // iOS keyboard gray
+        
+        // Add the emoji button to the keyboard view
+        keyboardView.addSubview(emojiButton)
         
         // Define key layouts
         let layout = [
             ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
             ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
             ["⇧", "z", "x", "c", "v", "b", "n", "m", "⌫"],
-            ["123", "space", "return"]
+            [ "123", "emoji", "space", "go"]
         ]
         
         let stackView = UIStackView()
@@ -219,15 +304,33 @@ class KeyboardViewController: UIInputViewController {
                 let button = UIButton(type: .system)
                 button.setTitle(key, for: .normal)
                 button.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+                
+                // If this is the emoji button, use our existing emojiButton
+                // if key == "emoji" {
+                //     // Skip adding a new button, we'll position our emojiButton here later
+                //     continue
+                // }
                 button.layer.cornerRadius = 5
                 button.titleLabel?.font = .systemFont(ofSize: 18)
                 button.tintColor = .black // iOS keyboard text color
                 
                 if key == "space" {
                     button.setTitle(" ", for: .normal)
+                } else if key == "emoji" {
+                    // Use system image for emoji button without any title
+                    button.setTitle("", for: .normal) // Empty string instead of nil
+                    button.accessibilityIdentifier = "emojiButton" // For identification
+                    
+                    if #available(iOSApplicationExtension 13.0, *) {
+                        button.setImage(UIImage(systemName: "face.smiling"), for: .normal)
+                    }
+                    
+                    // Add direct action to emoji button
+                    button.addTarget(self, action: #selector(showEmojiPicker), for: .touchUpInside)
+                } else {
+                    // Only add the keyPressed action to non-emoji buttons
+                    button.addTarget(self, action: #selector(keyPressed(_:)), for: .touchUpInside)
                 }
-                
-                button.addTarget(self, action: #selector(keyPressed(_:)), for: .touchUpInside)
                 rowStack.addArrangedSubview(button)
             }
             
@@ -243,10 +346,13 @@ class KeyboardViewController: UIInputViewController {
             stackView.bottomAnchor.constraint(equalTo: keyboardView.bottomAnchor, constant: -8)
         ])
         
+        // We're using the built-in keyboard layout for the emoji button now
+        
         return keyboardView
     }
     
     @objc private func keyPressed(_ sender: UIButton) {
+        // Get the button's title or use a tag-based approach for image-only buttons
         guard let key = sender.title(for: .normal) else { return }
         
         switch key {
@@ -265,6 +371,8 @@ class KeyboardViewController: UIInputViewController {
             textDocumentProxy.insertText("\n")
         case "space":
             textDocumentProxy.insertText(" ")
+        case "emoji", "":
+            showEmojiPicker()
         default:
             textDocumentProxy.insertText(key)
         }
